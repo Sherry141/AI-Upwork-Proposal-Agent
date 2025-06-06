@@ -1,0 +1,9 @@
+venv
+.env
+__pycache__/
+.DS_Store
+token.json
+pandoc-3.7.0.2-x86_64-macOS.pkg
+rough.py
+temp.docx
+sample.md
