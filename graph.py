@@ -61,22 +61,25 @@ class ProposalWorkflow:
 
     def tool_executor_node(self, state: WorkflowState):
         last_message = state["messages"][-1]
-        tool_call = last_message.tool_calls[0]
+        tool_messages = []
         
-        if tool_call["name"] == "generate_application_copy":
-            args = tool_call["args"]
-            args["previous_proposal"] = state.get("proposal")
-            result = generate_application_copy.invoke(args)
-            tool_message = ToolMessage(content=str(result), tool_call_id=tool_call["id"])
-            return {"proposal": result, "messages": [tool_message]}
+        for tool_call in last_message.tool_calls:
+            if tool_call["name"] == "generate_application_copy":
+                args = tool_call["args"]
+                args["previous_proposal"] = state.get("proposal")
+                result = generate_application_copy.invoke(args)
+                tool_messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
+                # Since this tool generates the main proposal, we update the state
+                # Note: If multiple tools of this type are called, the last one will overwrite the state.
+                state["proposal"] = result
+            
+            elif tool_call["name"] == "generate_google_doc_proposal":
+                result = generate_google_doc_proposal.invoke(tool_call["args"])
+                tool_messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
+                # The result is the URL, so we update the state accordingly
+                state["google_doc_url"] = result
         
-        elif tool_call["name"] == "generate_google_doc_proposal":
-            result = generate_google_doc_proposal.invoke(tool_call["args"])
-            tool_message = ToolMessage(content=str(result), tool_call_id=tool_call["id"])
-            # The result is the URL, so we update the state accordingly
-            return {"google_doc_url": result, "messages": [tool_message]}
-        
-        return {}
+        return {"messages": tool_messages}
 
     def run(self, query: str, thread_id: str):
         config = {"configurable": {"thread_id": thread_id}}
@@ -84,4 +87,4 @@ class ProposalWorkflow:
             {"messages": [("user", query)]},
             config=config,
             stream_mode="updates",
-        ) 
+        )

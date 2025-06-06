@@ -18,8 +18,19 @@ def generate_application_copy(
     """
     Generates a customized Upwork proposal based on a job description.
     Can also be used to refine a previously generated proposal given a change request.
+
+    Args:
+        job_description (str): The job description from the Upwork posting.
+        previous_proposal (Optional[str]): A previously generated proposal text, if one was generated.
+            If provided along with a change_request, the tool will refine the proposal.
+        change_request (Optional[str]): If the user wants to modify a previous attempt,
+            this parameter should contain the requested changes.
+
+
+    Returns:
+        str: The generated or refined proposal text.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
     structured_llm = llm.with_structured_output(schemas.Proposal)
 
     messages = [
