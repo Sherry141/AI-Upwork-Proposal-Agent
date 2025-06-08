@@ -11,7 +11,7 @@ from googleapiclient.http import MediaFileUpload
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 import prompts
 
@@ -56,7 +56,7 @@ def generate_google_doc_proposal(job_description: str, change_request: Optional[
     """
     try:
         # 1. Generate Markdown content
-        llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro-preview-06-05", temperature=0.7)
         messages = [
             SystemMessage(content=prompts.GOOGLE_DOC_PROPOSAL_SYSTEM_PROMPT),
             HumanMessage(content=job_description),
@@ -82,7 +82,7 @@ def generate_google_doc_proposal(job_description: str, change_request: Optional[
 
         # 4. Upload the .docx file and convert it to a Google Doc
         file_metadata = {
-            "name": "AI Generated Proposal",
+            "name": "Proposal - Shaheer Akhtar",
             "mimeType": "application/vnd.google-apps.document"
         }
         media = MediaFileUpload(docx_filename, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document", resumable=True)

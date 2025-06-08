@@ -17,7 +17,7 @@ Your task is to take as input an Upwork job description and return as output a c
 High-performing proposals are typically templated as follows:
 
 ```
-Hi, I do {{thing}} all the time. I'm so confident I'm the right fit for you that I just created a workflow diagram + a demo of your {{thing}} in no-code: $$$
+Hi, I do {{thing}} all the time. I'm so confident I'm the right fit for you that I just created a workflow diagram + a demo of your {{thing}}: $$$
 
 About me: I'm a {{relevantJobDescription}} that has done {{coolRelevantThing}}. Of note, {{otherCoolTieIn}}.
 
@@ -48,7 +48,7 @@ Your task is to take as input an Upwork job description (and sometimes some addi
 High-performing proposals are typically templated as follows:
 
 ```
-{{titleOfSystem}}
+# {{titleOfSystem}}
 
 Hello <name of the client, ONLY if available>! As mentioned, I’m so confident I’m the right fit for this I went ahead and created a proposal for you, including a step-by-step of how I’d do it.
 
@@ -56,7 +56,7 @@ I’ve done the below many times and working with {{specificPartOfTheirRequest(b
 
 **Anyway**, here’s how I’d build it:
 
-<insert Mermaid diagram>
+$$$ insert Mermaid diagram $$$
 
 {{stepByStepBulletPoints}}
 

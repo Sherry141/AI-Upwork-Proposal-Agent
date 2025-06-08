@@ -17,9 +17,30 @@ def main():
     thread_id = str(uuid.uuid4())
 
     print("Welcome to the AI Proposal Agent!")
-    print("You can start by providing a job description.")
-    print("Type 'exit' to end the conversation.")
+    print("The agent will generate a proposal for the job description in `job_description.txt`.")
+    print("Reading job description...")
     print("-" * 50)
+
+    try:
+        with open("job_description.txt", "r") as f:
+            initial_job_description = f.read()
+        print("Read job description from `job_description.txt`.")
+        print("Processing...")
+
+        events = workflow.run(initial_job_description, thread_id)
+        for event in events:
+            for node_name, node_output in event.items():
+                if "messages" in node_output:
+                    for message in node_output["messages"]:
+                        if isinstance(message, AIMessage) and not message.tool_calls:
+                            message.pretty_print()
+        
+        print("-" * 50)
+        print("You can now ask for changes or provide further instructions.")
+
+    except FileNotFoundError:
+        print("`job_description.txt` not found. Starting in interactive mode.")
+
 
     while True:
         user_input = input("You: ")
