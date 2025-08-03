@@ -1,11 +1,19 @@
-langchain
-langchain-openai
-langchain-google-genai
-python-dotenv
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
-pydantic
-pypandoc
-google-api-python-client
-google-auth
+# Core langchain and langgraph packages
+langchain==0.3.25
+langgraph==0.4.8
+langchain-core==0.3.63
+langchain-community==0.3.24
+
+# LLM provider packages
+langchain-openai==0.3.19
+langchain-google-genai==2.1.5
+
+# Google API client for Drive and Authentication
+google-api-python-client==2.171.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.2
+
+# Utilities
+python-dotenv==1.1.0
+pydantic==2.11.5
+pypandoc==1.15
