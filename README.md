@@ -115,3 +115,52 @@ Follow these instructions to set up and run the project on your local machine.
 ├── generated_content/      # Output directory for all artifacts
 └── requirements.txt        # Python package dependencies
 ```
+
+## Making the Agent Your Own: Personalization
+
+This agent is designed to be adapted to your unique skills and experience. To get the best results, you should customize the prompts and configurations with your own information.
+
+### 1. Update Your Professional Bio
+
+Open `prompts.py` and find the `ABOUT_ME` constant at the top of the file. This is the most important section to update.
+
+Replace the content with your own professional summary, skills, and a bulleted list of your most relevant projects.
+
+```python
+# prompts.py
+
+ABOUT_ME = """I'm a [Your Role] who specializes in [Your Specialization].
+
+Relevant projects:
+- [Your Project 1]: A brief, impactful description of a project you've completed.
+- [Your Project 2]: Another project description, highlighting a different skill or achievement.
+- ...
+"""
+```
+
+### 2. Customize the Google Doc Author Name
+
+The generated Google Doc is given a default name. You should change it to your own.
+
+-   Open `tools/google_doc.py`.
+-   Find the `file_metadata` dictionary inside the `generate_google_doc_proposal` function.
+-   Update the `"name"` field with your name.
+
+```python
+# tools/google_doc.py
+
+# ... inside generate_google_doc_proposal function
+file_metadata = {
+    "name": f"Proposal - [Your Name Here]",  # <--- CHANGE THIS
+    "mimeType": "application/vnd.google-apps.document"
+}
+```
+
+### 3. Fine-Tune the Example Proposals (Optional)
+
+The agent's ability to generate high-quality proposals and diagrams comes from the detailed examples provided in the prompts. The current examples are for a Generative AI Engineer.
+
+For best performance, especially if you work in a different field, you should replace these with your own examples.
+
+-   **For the Google Doc Proposal:** In `prompts.py`, review the `GOOGLE_DOC_PROPOSAL_SYSTEM_PROMPT`. The template is fairly generic, but you may want to tweak the tone or structure to better match your style.
+-   **For the Mermaid Diagram:** In `prompts.py`, review the `MERMAID_DIAGRAM_SYSTEM_PROMPT`. This prompt contains four long, detailed examples of proposals (`Proposal 1` through `Proposal 4`). Replacing these with 2-4 high-quality proposals from your own work history will dramatically improve the quality and relevance of the diagrams the agent generates for you.
