@@ -1,8 +1,8 @@
 import os
-import uuid
 from dotenv import load_dotenv
 from graph import ProposalWorkflow
 from langchain_core.messages import AIMessage
+from file_manager import FileStorageManager
 
 load_dotenv()
 
@@ -13,9 +13,7 @@ def main():
         return
 
     workflow = ProposalWorkflow()
-    # Each conversation will have a unique thread_id for memory
-    thread_id = str(uuid.uuid4())
-
+    
     print("Welcome to the AI Proposal Agent!")
     print("The agent will generate a proposal for the job description in `job_description.txt`.")
     print("Reading job description...")
@@ -24,10 +22,22 @@ def main():
     try:
         with open("job_description.txt", "r") as f:
             initial_job_description = f.read()
-        print("Read job description from `job_description.txt`.")
-        print("Processing...")
 
-        events = workflow.run(initial_job_description, thread_id)
+        # Each conversation will have a unique file manager and thread_id
+        file_manager = FileStorageManager()
+        thread_id = file_manager.timestamp
+        job_description_path = file_manager.save_job_description(initial_job_description)
+
+        print(f"Read job description and saved to {job_description_path}")
+        print(f"All generated content will be saved in: {file_manager.job_folder_path}")
+        print("Processing...")
+        
+        initial_state = {
+            "messages": [("user", initial_job_description)],
+            "job_folder_path": file_manager.job_folder_path
+        }
+
+        events = workflow.run(initial_state, thread_id)
         for event in events:
             for node_name, node_output in event.items():
                 if "messages" in node_output:
@@ -39,16 +49,22 @@ def main():
         print("You can now ask for changes or provide further instructions.")
 
     except FileNotFoundError:
-        print("`job_description.txt` not found. Starting in interactive mode.")
+        print("`job_description.txt` not found. Please create one and add the job description to it.")
+        return # Exit if the file is not found, as interactive mode is disabled.
 
-
+    # Interactive loop for the same job
     while True:
         user_input = input("You: ")
         if user_input.lower() == "exit":
             print("Goodbye!")
             break
+        
+        # Continue the same thread
+        events = workflow.run(
+            {"messages": [("user", user_input)]},
+            thread_id
+        )
 
-        events = workflow.run(user_input, thread_id)
         for event in events:
             # The event is a dictionary where keys are node names
             # and values are the updates to the state
@@ -58,7 +74,6 @@ def main():
                         # Only print final AI responses, not intermediate tool calls or results.
                         if isinstance(message, AIMessage) and not message.tool_calls:
                             message.pretty_print()
-
 
 if __name__ == "__main__":
     main()

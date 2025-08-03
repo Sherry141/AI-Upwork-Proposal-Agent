@@ -3,8 +3,12 @@ venv
 __pycache__/
 .DS_Store
 token.json
+credentials.json
 pandoc-3.7.0.2-x86_64-macOS.pkg
 rough.py
 temp.docx
 sample.md
 mermaid_diagrams/
+my_diagram.png
+generated_content/
+job_description.txt

@@ -9,12 +9,25 @@ from langgraph.checkpoint.memory import MemorySaver
 import prompts
 from tools import generate_application_copy
 from google_doc_tool import generate_google_doc_proposal
+from mermaid_tool import generate_mermaid_diagram
 
 
 class WorkflowState(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
+    job_folder_path: Optional[str]
+    
+    # Artifacts
     proposal: Optional[str]
+    cover_letter_path: Optional[str]
+    
     google_doc_url: Optional[str]
+    google_doc_markdown: Optional[str]
+    google_doc_md_path: Optional[str]
+    google_doc_docx_path: Optional[str]
+    
+    mermaid_code: Optional[str]
+    mermaid_code_path: Optional[str]
+    mermaid_image_path: Optional[str]
     # Future fields
     # mermaid_diagram: Optional[str]
     # google_doc: Optional[str]
@@ -23,7 +36,11 @@ class WorkflowState(TypedDict):
 class ProposalWorkflow:
     def __init__(self):
         self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
-        self.tools = [generate_application_copy, generate_google_doc_proposal]
+        self.tools = [
+            generate_application_copy,
+            generate_google_doc_proposal,
+            generate_mermaid_diagram,
+        ]
         self.model_with_tools = self.llm.bind_tools(self.tools)
         self.graph = self._build_graph()
 
@@ -62,29 +79,49 @@ class ProposalWorkflow:
     def tool_executor_node(self, state: WorkflowState):
         last_message = state["messages"][-1]
         tool_messages = []
+        state_updates = {}
         
         for tool_call in last_message.tool_calls:
+            # All tools now expect the state to be passed in.
+            args = {"state": state, **tool_call["args"]}
+
             if tool_call["name"] == "generate_application_copy":
-                args = tool_call["args"]
-                args["previous_proposal"] = state.get("proposal")
                 result = generate_application_copy.invoke(args)
-                tool_messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
-                # Since this tool generates the main proposal, we update the state
-                # Note: If multiple tools of this type are called, the last one will overwrite the state.
-                state["proposal"] = result
+                if "error" in result:
+                    tool_messages.append(ToolMessage(content=result["error"], tool_call_id=tool_call["id"]))
+                else:
+                    state_updates["proposal"] = result["proposal_text"]
+                    state_updates["cover_letter_path"] = result["file_path"]
+                    tool_messages.append(ToolMessage(content=str(result["proposal_text"]), tool_call_id=tool_call["id"]))
             
             elif tool_call["name"] == "generate_google_doc_proposal":
-                result = generate_google_doc_proposal.invoke(tool_call["args"])
-                tool_messages.append(ToolMessage(content=str(result), tool_call_id=tool_call["id"]))
-                # The result is the URL, so we update the state accordingly
-                state["google_doc_url"] = result
-        
-        return {"messages": tool_messages}
+                result = generate_google_doc_proposal.invoke(args)
+                if "error" in result:
+                    tool_messages.append(ToolMessage(content=result["error"], tool_call_id=tool_call["id"]))
+                else:
+                    state_updates["google_doc_url"] = result["doc_url"]
+                    state_updates["google_doc_markdown"] = result["markdown_content"]
+                    state_updates["google_doc_md_path"] = result["md_path"]
+                    state_updates["google_doc_docx_path"] = result["docx_path"]
+                    tool_messages.append(ToolMessage(content=f"Google Doc created at {result['doc_url']}", tool_call_id=tool_call["id"]))
+            
+            elif tool_call["name"] == "generate_mermaid_diagram":
+                result = generate_mermaid_diagram.invoke(args)
+                if "error" in result:
+                    tool_messages.append(ToolMessage(content=result["error"], tool_call_id=tool_call["id"]))
+                else:
+                    state_updates["mermaid_code"] = result["mermaid_code"]
+                    state_updates["mermaid_code_path"] = result["mermaid_code_path"]
+                    state_updates["mermaid_image_path"] = result["image_path"]
+                    tool_messages.append(ToolMessage(content=f"Diagram saved to {result['image_path']}", tool_call_id=tool_call["id"]))
 
-    def run(self, query: str, thread_id: str):
+        state_updates["messages"] = tool_messages
+        return state_updates
+
+    def run(self, initial_state: dict, thread_id: str):
         config = {"configurable": {"thread_id": thread_id}}
         return self.graph.stream(
-            {"messages": [("user", query)]},
+            initial_state,
             config=config,
             stream_mode="updates",
         )

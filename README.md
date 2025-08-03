@@ -1,0 +1,1 @@
+- Install the Mermaid CLI with `npm install -g @mermaid-js/mermaid-cli`. 

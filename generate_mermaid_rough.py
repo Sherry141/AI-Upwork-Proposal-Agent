@@ -31,41 +31,41 @@ if __name__ == "__main__":
     mermaid_code = """
 %%{init: {
    'flowchart': {
-     'nodeSpacing': 50,
-     'rankSpacing': 20
+     'nodeSpacing': 150,
+     'rankSpacing': 80
    },
    'themeVariables': {
      'fontSize': '16px'
    }
 }}%%
 graph TD
-    A["User<br/>(Provides Strategic Brief)"] --> B{"Master Coordinator Agent"};
-    B -- "Decomposes brief into a plan" --> C{"Data Sourcing Agent"};
-
-    subgraph "Autonomous R&D Cycle"
-        C -- "Raw Data" --> D{"Feature Engineering Agent"};
-        D -- "Engineered Features" --> E{"Modeling Agent"};
-        E -- "Strategy Hypothesis" --> F{"Backtesting Agent"};
-        F -- "Performance Metrics" --> B;
+    subgraph "Milestone 1: Foundation"
+        A["Platform & API Setup<br/>(n8n, M365, OpenAI, Power BI)"];
     end
 
-    B -- "Initiates Iteration Loop" --> D;
-
-    B -- "Presents Promising Strategy" --> G{"Human-in-the-Loop<br/>Review & Approval"};
-    
-    subgraph "Finalization & Delivery"
-        G -- "Strategy Approved" --> H{"Code Generation Agent"};
-        H --> I["Production-Ready Code<br/>(Python & C++)"];
-        G -- "Strategy Approved" --> J{"Reporting Agent"};
-        J --> K["Comprehensive Report<br/>(Methodology, Backtest, etc.)"];
+    subgraph "Milestone 2: Onboarding Agent"
+        B["Client Kickoff Meeting<br/>(Teams Recording)"] --> C{"Process: Transcribe & Extract<br/>Minutes of Meeting (GPT-4o)"};
+        C --> D["Output: Summary Email &<br/>Archive to OneDrive"];
     end
 
-    I --> L[Final Strategy Package];
-    K --> L[Final Strategy Package];
+    subgraph "Milestone 3: Risk & Compliance Agent"
+        E["Compliance Artifacts &<br/>Walkthrough Sessions (OneDrive)"] --> F{"Process: RAG Analysis<br/>(Documents vs. Controls)"};
+        F --> G["Output: Initial Risk Assessments<br/>& Treatment Plans"];
+    end
 
-    style G fill:#f9f,stroke:#333,stroke-width:2px
-    style A fill:#cde4ff
-    style L fill:#d5e8d4
+    subgraph "Milestone 4: Compliance Register Agent"
+        D & G --> H{"Process: Aggregate All Findings"};
+        H --> I["Output: Populate Excel<br/>Compliance Register (GPT-4o)"];
+    end
+
+    subgraph "Milestone 5: Final Reporting & Dashboard"
+        I --> J{"Process: Generate Client<br/>Executive Summary (GPT-4o)"};
+        J --> K["Update Power BI Dashboard"];
+        K --> L["Client View: Interactive Dashboard<br/>Embedded in SharePoint"];
+    end
+
+    A --> B;
+    A --> E;
 """
     # try bumping width up, height down, scale up
     render_mermaid(mermaid_code,

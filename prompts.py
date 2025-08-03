@@ -1,12 +1,13 @@
 ABOUT_ME = """I'm a generative AI engineer who builds intelligent multi-agent systems, LangChain/LangGraph workflows, RAG systems, and AI-powered tools for real-world impact.
 
 Relevant projects:
-- AI network engineer using LangChain, projected to save $200,000+ annually by autonomously troubleshooting networks with 5000+ custom Cisco API tools.; this is a top 12 finalist in T-Mobile T Challenge.
+- AI Network Engineer: A multi-agent system that acts as a fully autonomous network engineer. It uses over 5,000 custom API tools to diagnose, troubleshoot, and resolve complex network issues for 100s of devices without human intervention. This system is projected to save over $200,000 annually and is a top 12 finalist in the T-Mobile T-Challenge.
 - AI Market Researcher agent that scrapes competitor sites, clusters pain points, and writes data-backed reports; saved ≈ $25 k in research fees.
 - AI document information extraction & summarization pipeline for a multinational glass manufacturer, saving ~$45,000/year.
 - AI recruiter automation pipeline that analyzed batches of CVs across any evaluation metrics a user defined.
-- AI journaling app with LangChain and Django.
+- AI Journaling App in LangChain and Django: Emotionally intelligent journaling assistant that prompts users to help them journal and promote self-reflection. Also does an in-depth analysis of their journaling patterns over time to give insights on moods, behaviors, habits, recurring life themes, etc. 
 - AI therapist using LangGraph and FastAPI.
+- AI Lead Generation & Enrichment Agent: I created a system that ingests a list of target companies, finds their key decision-makers on LinkedIn using the Proxycurl API, and then performs automated web searches to find and verify their professional email addresses—turning a simple company list into a sales-qualified lead list.
 """
 
 PROPOSAL_GENERATION_SYSTEM_PROMPT = f"""
@@ -56,7 +57,7 @@ I’ve done the below many times and working with {{specificPartOfTheirRequest(b
 
 **Anyway**, here’s how I’d build it:
 
-$$$ insert Mermaid diagram $$$
+[MERMAID_DIAGRAM_PLACEHOLDER]
 
 {{stepByStepBulletPoints}}
 
@@ -74,7 +75,7 @@ I am really confident I can blow this out of the park for you, so if this sounds
 **Thank you for your time!**
 ```
 
-Leave the "<insert Mermaid diagram>" placeholder EXACTLY AS IT IS for now in your response. I will use this placeholder to insert the Mermaid diagram later.
+Leave the "[MERMAID_DIAGRAM_PLACEHOLDER]" placeholder EXACTLY AS IT IS for now in your response. I will use this placeholder to insert the Mermaid diagram later.
 
 Remember to tailor the content to the specific job description provided. The client is looking for a proposal that is tailored to their specific needs, so you should include details about the project that are relevant to the job description. If they have asked any more questions, address them properly. The template is just a guide, so you can add or remove things as needed.
 
@@ -93,16 +94,19 @@ ORCHESTRATOR_SYSTEM_PROMPT = """I am applying to jobs on freelance platforms. Yo
 
 Your job is to decide whether to call a tool or to respond to the user based on the conversation history.
 
-You have two tools available:
+You have three tools available:
 1. `generate_application_copy`: Use this tool first when making a proposal. This will generate a proposal the user can copy paste into Upwork when bidding.
 2. `generate_google_doc_proposal`: Use this tool to generate a detailed proposal in a Google Doc. This will give you a link, that you should share with the user, so they can share it alongside their Upwork proposal. 
+3. `generate_mermaid_diagram`: After generating the Google Doc content, use this tool to create a Mermaid diagram that visually explains the workflow described in the proposal. It will return a path to the saved image.
 
 **Your Routing Logic:**
 
-1.  **Initial Request**: If the user sends in an Upwork job description, call `generate_application_copy`, followed by `generate_google_doc_proposal`.
-
-2.  **Modification Request**: If the user asks for changes to a proposal, call the appropriate tool again (you may not have to call all tools, depending on the user's specific edit). You MUST include the user's feedback in the `change_request` parameter.
-
+1.  **Initial Request**: If the user sends in an Upwork job description, your sequence of operations should be:
+    a. Call `generate_application_copy`.
+    b. Call `generate_google_doc_proposal`.
+    c. Call `generate_mermaid_diagram` using the text from the Google Doc proposal as the `workflow_description`.
+    d. Finally, respond to the user with the application copy, the Google Doc URL, and the path to the diagram image.
+2.  **Modification Request**: If the user asks for changes, determine which artifact needs to be updated (the proposal, the Google Doc, or the diagram) and call the appropriate tool. You MUST include the user's feedback in the `change_request` parameter and pass the previous artifact (e.g., `previous_proposal` or `previous_mermaid_code`) to the tool.
 3. Once you have fulfilled the request, share the proposal and URL with the user. 
 
 Call one tool at a time, check its output, then call the next or respond to the user if complete. 
@@ -139,7 +143,7 @@ I’ve done the below many times and working with **custom legal document ingest
 
 **Anyway**, here’s how I’d build it:
 
-<insert Mermaid diagram>
+[MERMAID_DIAGRAM_PLACEHOLDER]
 
 - **1. Foundation & Secure Data Ingestion:** First, we'll set up the secure foundation for the system. I'll build a data ingestion pipeline that takes your legal documents (IRS rulings, regs, etc.), intelligently parses and chunks them (respecting document structure like sections and paragraphs), and uses OpenAI's state-of-the-art models to create vector embeddings. These will be stored in a local and secure vector database like Chroma or FAISS, ensuring your sensitive data never leaves your control.
 
@@ -224,7 +228,7 @@ I’ve done the below many times and working with multi-step AI content workflow
 
 **Anyway**, here’s how I’d build your SEO agent in N8N:
 
-<insert Mermaid diagram>
+[MERMAID_DIAGRAM_PLACEHOLDER]
 
 - **Step 1: Web Ingestion & Looping:** We'll start with an N8N node to ingest a list of target URLs. This will trigger a loop, processing each URL one by one for scalable content creation.
 
@@ -305,7 +309,7 @@ I’ve done the below many times and working with multi-step agentic workflows t
 
 **Anyway**, here’s how I’d build it:
 
-<insert Mermaid diagram>
+[MERMAID_DIAGRAM_PLACEHOLDER]
 
 - **Step 1: Data Ingestion & RAG Foundation.** First, I'll set up a daily automated agent to query Google News for U.S. supply chain disruptions. A subsequent LLM-powered pipeline will then extract and structure key data points (headlines, summaries, impacted sectors) and embed them into a Relevance AI knowledge base, creating a powerful foundation for the rest of the workflow.
 
@@ -386,7 +390,7 @@ I’ve done the below many times and working with intelligent multi-agent system
 
 **Anyway**, here’s how I’d build it:
 
-$$$ insert Mermaid diagram $$$
+[MERMAID_DIAGRAM_PLACEHOLDER]
 
 - **Step 1: Strategic Briefing & Decomposition.** The system starts when you (the founder) provide a high-level strategic prompt (e.g., "Explore momentum strategies for US tech stocks using social media sentiment as a factor"). A `Master Coordinator Agent` (built using a framework like LangGraph for state management) parses this brief and breaks it down into a logical, multi-stage research plan.
 

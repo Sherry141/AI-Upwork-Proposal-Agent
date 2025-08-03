@@ -1,7 +1,7 @@
 import os
 import os.path
 import pypandoc
-from typing import Optional
+from typing import Optional, Dict, Annotated
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -11,6 +11,7 @@ from googleapiclient.http import MediaFileUpload
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
+from langgraph.prebuilt import InjectedState
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 import prompts
@@ -36,27 +37,31 @@ def get_google_credentials():
 
 
 @tool
-def generate_google_doc_proposal(job_description: str, change_request: Optional[str] = None) -> str:
+def generate_google_doc_proposal(state: Annotated[dict, InjectedState], job_description: str, change_request: Optional[str] = None) -> Dict[str, str]:
     """
-    Generates a full, detailed proposal in a Google Doc.
+    Generates a full, detailed proposal, saves it locally, and uploads it to Google Drive.
 
     This tool takes a job description, generates proposal content in Markdown format,
-    converts the Markdown to a .docx file, and then uploads it to Google Drive,
-    converting it to a native Google Doc. The final output is a shareable link
-    to the generated document.
+    converts the Markdown to a .docx file, saves both locally, and then uploads the
+    .docx to Google Drive, converting it to a native Google Doc.
 
     Args:
+        state (Annotated[dict, InjectedState]): The current workflow state, injected automatically.
         job_description (str): The job description for which to generate a proposal.
         change_request (Optional[str]): If the user wants to modify a previous attempt,
             this parameter should contain the requested changes.
 
     Returns:
-        str: A string containing the URL to the newly created Google Doc, or an
-             error message if something went wrong.
+        Dict[str, str]: A dictionary containing `doc_url`, `markdown_content`, `md_path`,
+                        `docx_path`, or an error message.
     """
+    job_folder_path = state.get("job_folder_path")
+    if not job_folder_path:
+        return {"error": "Error: `job_folder_path` is missing from the state."}
+
     try:
         # 1. Generate Markdown content
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro-preview-06-05", temperature=0.7)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7)
         messages = [
             SystemMessage(content=prompts.GOOGLE_DOC_PROPOSAL_SYSTEM_PROMPT),
             HumanMessage(content=job_description),
@@ -68,46 +73,52 @@ def generate_google_doc_proposal(job_description: str, change_request: Optional[
         if (markdown_content.startswith("```markdown") or markdown_content.startswith("\n```markdown") or markdown_content.startswith("```") or markdown_content.startswith("\n```")) and markdown_content.endswith("```"):
             markdown_content = markdown_content[11:-3].strip()
         
-        # 2. Convert Markdown to DOCX using pypandoc
-        md_filename = "temp_proposal.md"
-        docx_filename = "temp_proposal.docx"
-        with open(md_filename, "w") as f:
+        # 2. Define local paths and save Markdown
+        timestamp = os.path.basename(job_folder_path)
+        google_doc_proposal_path = os.path.join(job_folder_path, "google_doc_proposal")
+        md_path = os.path.join(google_doc_proposal_path, f"proposal_{timestamp}.md")
+        docx_path = os.path.join(google_doc_proposal_path, f"proposal_{timestamp}.docx")
+
+        with open(md_path, "w") as f:
             f.write(markdown_content)
         
-        pypandoc.convert_file(md_filename, 'docx', outputfile=docx_filename, extra_args=["--from=markdown-auto_identifiers", "-M", "auto-identifiers=false"])
+        # 3. Convert Markdown to DOCX using pypandoc
+        pypandoc.convert_file(md_path, 'docx', outputfile=docx_path, extra_args=["--from=markdown-auto_identifiers", "-M", "auto-identifiers=false"])
 
-        # 3. Authenticate and build Google Drive service
+        # 4. Authenticate and build Google Drive service
         creds = get_google_credentials()
         drive_service = build("drive", "v3", credentials=creds)
 
-        # 4. Upload the .docx file and convert it to a Google Doc
+        # 5. Upload the .docx file and convert it to a Google Doc
         file_metadata = {
-            "name": "Proposal - Shaheer Akhtar",
+            "name": f"Proposal - Shaheer Akhtar",
             "mimeType": "application/vnd.google-apps.document"
         }
-        media = MediaFileUpload(docx_filename, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document", resumable=True)
+        media = MediaFileUpload(docx_path, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document", resumable=True)
         
         uploaded_file = drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
         doc_id = uploaded_file.get("id")
 
-        # 5. Share the document
+        # 6. Share the document
         drive_service.permissions().create(fileId=doc_id, body={"type": "anyone", "role": "reader"}).execute()
 
-        # 6. Cleanup local files
-        # os.remove(md_filename)
-        # os.remove(docx_filename)
-
         doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
-        return f"I have created the Google Doc proposal for you. You can view it here: {doc_url}"
+        return {
+            "doc_url": doc_url,
+            "markdown_content": markdown_content,
+            "md_path": md_path,
+            "docx_path": docx_path
+        }
 
     except FileNotFoundError:
-        return "Error: `credentials.json` not found. Please ensure it is in the root directory."
+        return {"error": "Error: `credentials.json` not found. Please ensure it is in the root directory."}
     except Exception as e:
-        return f"An error occurred: {e}"
+        return {"error": f"An error occurred: {e}"}
 
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
+    from file_manager import FileStorageManager
     load_dotenv()
     
     # Ensure pandoc is available
@@ -124,6 +135,14 @@ if __name__ == "__main__":
     Please provide a proposal outlining how you would approach automating our lead qualification process.
     """
     
+    # To test the tool directly, we need to simulate the state
+    # that would be passed by the graph.
+    file_manager = FileStorageManager()
+    mock_state = {"job_folder_path": file_manager.job_folder_path}
+    
     print("Generating Google Doc proposal...")
-    result = generate_google_doc_proposal(sample_job_description)
+    result = generate_google_doc_proposal.invoke({
+        "state": mock_state,
+        "job_description": sample_job_description
+    })
     print(result)
