@@ -5,7 +5,7 @@ __pycache__/
 token.json
 credentials.json
 pandoc-3.7.0.2-x86_64-macOS.pkg
-rough.py
+dev/
 temp.docx
 sample.md
 mermaid_diagrams/

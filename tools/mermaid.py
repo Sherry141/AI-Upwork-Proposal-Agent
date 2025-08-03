@@ -156,4 +156,4 @@ if __name__ == '__main__':
     #         change_request=refinement_request
     #     )
     #     print(refined_result)
-    print("Local tests for `generate_mermaid_diagram` are disabled because it now requires injected state.")
+    print("Local tests for `generate_mermaid_diagram` are disabled because it now requires injected state.") 

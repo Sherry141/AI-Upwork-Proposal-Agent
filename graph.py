@@ -7,9 +7,9 @@ from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 
 import prompts
-from tools import generate_application_copy
-from google_doc_tool import generate_google_doc_proposal
-from mermaid_tool import generate_mermaid_diagram
+from tools.cover_letter import generate_cover_letter
+from tools.google_doc import generate_google_doc_proposal
+from tools.mermaid import generate_mermaid_diagram
 
 
 class WorkflowState(TypedDict):
@@ -37,7 +37,7 @@ class ProposalWorkflow:
     def __init__(self):
         self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
         self.tools = [
-            generate_application_copy,
+            generate_cover_letter,
             generate_google_doc_proposal,
             generate_mermaid_diagram,
         ]
@@ -85,8 +85,8 @@ class ProposalWorkflow:
             # All tools now expect the state to be passed in.
             args = {"state": state, **tool_call["args"]}
 
-            if tool_call["name"] == "generate_application_copy":
-                result = generate_application_copy.invoke(args)
+            if tool_call["name"] == "generate_cover_letter":
+                result = generate_cover_letter.invoke(args)
                 if "error" in result:
                     tool_messages.append(ToolMessage(content=result["error"], tool_call_id=tool_call["id"]))
                 else:

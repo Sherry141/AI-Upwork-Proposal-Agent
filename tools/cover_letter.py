@@ -5,21 +5,20 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
 from langchain_openai import ChatOpenAI
-from file_manager import FileStorageManager
 
 import prompts
 import schemas
 
 
 @tool
-def generate_application_copy(
+def generate_cover_letter(
     state: Annotated[dict, InjectedState],
     job_description: str,
     change_request: Optional[str] = None,
 ) -> dict:
     """
-    Generates a customized Upwork proposal, saves it to a file, and returns the content and path.
-    Can also be used to refine a previously generated proposal given a change request.
+    Generates a customized Upwork cover letter, saves it to a file, and returns the content and path.
+    Can also be used to refine a previously generated cover letter given a change request.
 
     Args:
         state (Annotated[dict, InjectedState]): The current workflow state, injected automatically.
@@ -77,4 +76,4 @@ def generate_application_copy(
     with open(file_path, "w") as f:
         f.write(proposal_text)
 
-    return {"proposal_text": proposal_text, "file_path": file_path}
+    return {"proposal_text": proposal_text, "file_path": file_path} 

@@ -118,7 +118,7 @@ def generate_google_doc_proposal(state: Annotated[dict, InjectedState], job_desc
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
-    from file_manager import FileStorageManager
+    from utils.file_manager import FileStorageManager
     load_dotenv()
     
     # Ensure pandoc is available
@@ -145,4 +145,4 @@ if __name__ == "__main__":
         "state": mock_state,
         "job_description": sample_job_description
     })
-    print(result)
+    print(result) 

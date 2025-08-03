@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from graph import ProposalWorkflow
 from langchain_core.messages import AIMessage
-from file_manager import FileStorageManager
+from utils.file_manager import FileStorageManager
 
 load_dotenv()
 
@@ -55,7 +55,7 @@ def main():
     # Interactive loop for the same job
     while True:
         user_input = input("You: ")
-        if user_input.lower() == "exit":
+        if user_input.lower() == "exit" or user_input.lower() == "q":
             print("Goodbye!")
             break
         
